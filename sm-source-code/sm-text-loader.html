@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+
+<!-- // this is the text constant and loader -->
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+<div id="custom-product-text"></div>
+
+<script>
+(function () {
+    const JSON_URL = "https://raw.githubusercontent.com/dpzcr/sm-textsource/main/sm-ts.json";
+
+    const container = document.getElementById("custom-product-text");
+    if (!container) return;
+
+    function generateKey(rawTitle) {
+        if (!rawTitle || typeof rawTitle !== 'string') return null;
+        let slug = rawTitle.split('|')[0].trim().toLowerCase();
+        slug = slug.replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+        slug = slug.replace(/-+/g, '-').replace(/^-|-$/g, '');
+        return `info-${slug}`;
+    }
+
+    function extractProductName() {
+        try {
+            const parentDoc = window.parent.document;
+            const h1 = parentDoc.querySelector("h1");
+            return h1 ? h1.innerText.trim() : null;
+        } catch(e) { return null; }
+    }
+
+    function displayText(text) {
+        container.innerHTML = `
+            <div style="
+                font-family: 'Outfit', sans-serif;
+                font-size: 15px;
+                line-height: 1.7;
+                color: #333;
+                margin: 0;
+                padding: 0;
+            ">${text}</div>
+        `;
+    }
+
+    const interval = setInterval(async () => {
+        const productName = extractProductName();
+        if (productName) {
+            clearInterval(interval);
+            const key = generateKey(productName);
+            try {
+                const response = await fetch(JSON_URL);
+                const data = await response.json();
+                const text = data[key];
+                if (text) displayText(text);
+            } catch(e) {
+                console.error("Failed to load text source:", e);
+            }
+        }
+    }, 300);
+
+    setTimeout(() => clearInterval(interval), 15000);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+
+<!-- // this is the image loader with incremental suffix search -->
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product Image Display</title>
+</head>
+<body>
+<div id="custom-product-message"></div>
+
+<script>
+(function () {
+    // ========== CUSTOMIZABLE CONFIGURATIONS ==========
+    const CONFIG = {
+        // Container/section sizing (where the image sits)
+        containerWidth: "100%",      // Width of the container ("100%", "800px", "auto")
+        containerMaxWidth: "1500px",   // Max width of container (prevents too large)
+        
+        // Image sizing (fits inside container)
+        imageWidth: "100%",           // Image fills container width
+        imageHeight: "auto",          // Auto maintains aspect ratio (1187x1149)
+        
+        // Image styling
+        borderRadius: "8px",
+        objectFit: "contain",         // "contain" shows full image, "cover" fills area
+        
+        // Display options
+        marginTop: "10px",
+        marginBottom: "10px",
+        
+        // Vertical spacing between stacked images (in pixels)
+        verticalGap: "15px",           // Spacing between each image (10-20px range)
+        
+        // Your media library base URL
+        mediaBaseUrl: "https://assets.zyrosite.com/lp45h47CgUQAGxko/",
+        
+        // Debug mode
+        debug: false                   // Set to true to see console logs
+    };
+    // ================================================
+    
+    const container = document.getElementById("custom-product-message");
+    if (!container) return;
+    
+    // Style the container as a vertical stack
+    container.style.cssText = `
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-start;
+        width: ${CONFIG.containerWidth};
+        max-width: ${CONFIG.containerMaxWidth};
+        margin: ${CONFIG.marginTop} auto ${CONFIG.marginBottom} auto;
+        padding: 0;
+        border: none;
+        background: transparent;
+        gap: ${CONFIG.verticalGap};
+    `;
+    
+    function log(msg) {
+        if (CONFIG.debug) console.log("[Product Image]", msg);
+    }
+    
+    function generateImageKey(rawTitle) {
+        if (!rawTitle || typeof rawTitle !== 'string') return null;
+        let beforePipe = rawTitle.split('|')[0];
+        let cleaned = beforePipe.trim().toLowerCase();
+        let slug = cleaned.replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+        slug = slug.replace(/-+/g, '-').replace(/^-|-$/g, '');
+        return `info-${slug}`;
+    }
+    
+    function checkImageExists(url) {
+        return new Promise((resolve) => {
+            const img = new Image();
+            img.onload = () => resolve(true);
+            img.onerror = () => resolve(false);
+            img.src = url;
+            setTimeout(() => resolve(false), 3000);
+        });
+    }
+    
+    // Manual image mapping for files with random strings
+    const MANUAL_IMAGE_MAP = {
+        "info-ventilator-crius-v6": "https://assets.zyrosite.com/lp45h47CgUQAGxko/info-ventilator-crius-v6-wJPMPkC6fyHoM28g.png"
+        // Add more mappings as needed
+    };
+    
+    // NEW FUNCTION: Searches multiple keys with incrementing suffix
+    // Returns array of all found image URLs in order (base, base-2, base-3, etc.)
+    async function getAllImageUrlsInSequence(imageKey) {
+        const foundUrls = [];
+        
+        // Check if there's a manual mapping for the base key
+        let baseUrl = null;
+        if (MANUAL_IMAGE_MAP[imageKey]) {
+            log(`Using manual mapping for base: ${imageKey}`);
+            baseUrl = MANUAL_IMAGE_MAP[imageKey];
+            const exists = await checkImageExists(baseUrl);
+            if (exists) {
+                foundUrls.push(baseUrl);
+                log(`Manual base image added: ${baseUrl}`);
+            } else {
+                baseUrl = null;
+            }
+        }
+        
+        // If no manual mapping, try automatic patterns for base key
+        if (!baseUrl) {
+            const basePatterns = [
+                `${CONFIG.mediaBaseUrl}${imageKey}.png`,
+                `${CONFIG.mediaBaseUrl}${imageKey}.jpg`,
+                `${CONFIG.mediaBaseUrl}${imageKey}.webp`,
+            ];
+            
+            for (const url of basePatterns) {
+                const exists = await checkImageExists(url);
+                if (exists) {
+                    foundUrls.push(url);
+                    log(`Base image found: ${url}`);
+                    break;
+                }
+            }
+        }
+        
+        // If base image doesn't exist, return empty array (nothing to display)
+        if (foundUrls.length === 0) {
+            log(`No base image found for key: ${imageKey}`);
+            return [];
+        }
+        
+        // Now search for incrementing suffixes: -2, -3, -4, etc.
+        let suffix = 2;
+        let keepSearching = true;
+        
+        while (keepSearching) {
+            const suffixedKey = `${imageKey}-${suffix}`;
+            let imageFoundForThisSuffix = false;
+            
+            // Try all extensions for this suffixed key
+            const patterns = [
+                `${CONFIG.mediaBaseUrl}${suffixedKey}.png`,
+                `${CONFIG.mediaBaseUrl}${suffixedKey}.jpg`,
+                `${CONFIG.mediaBaseUrl}${suffixedKey}.webp`,
+            ];
+            
+            for (const url of patterns) {
+                const exists = await checkImageExists(url);
+                if (exists) {
+                    foundUrls.push(url);
+                    log(`Found suffixed image: ${url} (suffix ${suffix})`);
+                    imageFoundForThisSuffix = true;
+                    break;
+                }
+            }
+            
+            if (!imageFoundForThisSuffix) {
+                // Stop incrementing - no more images found
+                keepSearching = false;
+                log(`No image found for suffix ${suffix}, stopping search`);
+            } else {
+                suffix++; // Move to next suffix number
+            }
+        }
+        
+        log(`Total images found in sequence: ${foundUrls.length}`);
+        return foundUrls;
+    }
+    
+    // MODIFIED: Now displays multiple images vertically
+    function displayImages(imageUrls) {
+        if (!imageUrls || imageUrls.length === 0) {
+            container.innerHTML = "";
+            return;
+        }
+        
+        // Build HTML with all images stacked vertically
+        let imagesHtml = '';
+        for (let i = 0; i < imageUrls.length; i++) {
+            imagesHtml += `
+                <img src="${imageUrls[i]}" 
+                     style="width: ${CONFIG.imageWidth}; 
+                            height: ${CONFIG.imageHeight}; 
+                            border-radius: ${CONFIG.borderRadius};
+                            object-fit: ${CONFIG.objectFit};
+                            display: block;
+                            margin: 0 auto;" 
+                     alt="Product image ${i + 1}">
+            `;
+        }
+        
+        container.innerHTML = imagesHtml;
+        log(`${imageUrls.length} images displayed vertically`);
+    }
+    
+    function extractProductName() {
+        try {
+            const parentDoc = window.parent.document;
+            if (!parentDoc) return null;
+            
+            let productEl = parentDoc.querySelector("h1.block-product__title");
+            if (productEl && productEl.innerText.trim()) {
+                return productEl.innerText.trim();
+            }
+            
+            const allH1s = parentDoc.querySelectorAll("h1");
+            for (let i = 0; i < allH1s.length; i++) {
+                const text = allH1s[i].innerText.trim();
+                if (text && text.length > 2 && text.length < 200) {
+                    if (!text.toLowerCase().includes("search") && !text.toLowerCase().includes("error")) {
+                        return text;
+                    }
+                }
+            }
+            return null;
+        } catch(e) {
+            log("Cannot access parent document");
+            return null;
+        }
+    }
+    
+    let findInterval = setInterval(async () => {
+        const productName = extractProductName();
+        
+        if (productName) {
+            clearInterval(findInterval);
+            const imageKey = generateImageKey(productName);
+            log(`Product: ${productName} | Key: ${imageKey}`);
+            
+            // Get ALL images in sequence (base, -2, -3, etc.)
+            const imageUrls = await getAllImageUrlsInSequence(imageKey);
+            
+            if (imageUrls.length > 0) {
+                displayImages(imageUrls);
+            } else {
+                log(`No images found for: ${imageKey} or any suffix`);
+                container.innerHTML = "";
+            }
+        }
+    }, 300);
+    
+    setTimeout(() => {
+        if (findInterval) {
+            clearInterval(findInterval);
+            log("Timeout - no product detected");
+        }
+    }, 15000);
+})();
+</script>
+</body>
+</html>
