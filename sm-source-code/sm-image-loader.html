@@ -1,7 +1,4 @@
 <!DOCTYPE html>
-
-<!-- // this is the image loader with incremental suffix search -->
-
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -13,39 +10,24 @@
 
 <script>
 (function () {
-    // ========== CUSTOMIZABLE CONFIGURATIONS ==========
     const CONFIG = {
-        // Container/section sizing (where the image sits)
-        containerWidth: "100%",      // Width of the container ("100%", "800px", "auto")
-        containerMaxWidth: "1500px",   // Max width of container (prevents too large)
-        
-        // Image sizing (fits inside container)
-        imageWidth: "100%",           // Image fills container width
-        imageHeight: "auto",          // Auto maintains aspect ratio (1187x1149)
-        
-        // Image styling
+        containerWidth: "100%",
+        containerMaxWidth: "1500px",
+        imageWidth: "100%",
+        imageHeight: "auto",
         borderRadius: "8px",
-        objectFit: "contain",         // "contain" shows full image, "cover" fills area
-        
-        // Display options
+        objectFit: "contain",
         marginTop: "10px",
         marginBottom: "10px",
-        
-        // Vertical spacing between stacked images (in pixels)
-        verticalGap: "15px",           // Spacing between each image (10-20px range)
-        
-        // Your media library base URL
+        verticalGap: "15px",
         mediaBaseUrl: "https://raw.githubusercontent.com/dpzcr/sm-textsource/main/sm-info/",
-        
-        // Debug mode
-        debug: false                   // Set to true to see console logs
+        masterJsonUrl: "https://raw.githubusercontent.com/dpzcr/sm-textsource/main/sm-ts.json",
+        debug: false
     };
-    // ================================================
-    
+
     const container = document.getElementById("custom-product-message");
     if (!container) return;
-    
-    // Style the container as a vertical stack
+
     container.style.cssText = `
         display: flex;
         flex-direction: column;
@@ -59,11 +41,11 @@
         background: transparent;
         gap: ${CONFIG.verticalGap};
     `;
-    
+
     function log(msg) {
         if (CONFIG.debug) console.log("[Product Image]", msg);
     }
-    
+
     function generateImageKey(rawTitle) {
         if (!rawTitle || typeof rawTitle !== 'string') return null;
         let beforePipe = rawTitle.split('|')[0];
@@ -72,104 +54,67 @@
         slug = slug.replace(/-+/g, '-').replace(/^-|-$/g, '');
         return `info-${slug}`;
     }
-    
-    function checkImageExists(url) {
+
+    async function fetchImageCount(imageKey) {
+        try {
+            const res = await fetch(`${CONFIG.masterJsonUrl}?t=${Date.now()}`);
+            const data = await res.json();
+            const entry = data[imageKey];
+            if (entry && typeof entry.image_count === 'number') {
+                return entry.image_count;
+            }
+            log(`Key "${imageKey}" not found or missing image_count in master JSON`);
+            return 0;
+        } catch (e) {
+            log("Failed to fetch master JSON: " + e);
+            return 0;
+        }
+    }
+
+    function appendImageAndWait(url, index) {
         return new Promise((resolve) => {
-            const img = new Image();
-
-            const timeout = setTimeout(() => {
-                resolve(false);
-            }, 3000);
-
+            const img = document.createElement('img');
+            img.alt = `Product image ${index}`;
+            img.style.cssText = `
+                width: ${CONFIG.imageWidth};
+                height: ${CONFIG.imageHeight};
+                border-radius: ${CONFIG.borderRadius};
+                object-fit: ${CONFIG.objectFit};
+                display: block;
+                margin: 0 auto;
+            `;
             img.onload = () => {
-                clearTimeout(timeout);
-                resolve(true);
+                log(`Image ${index} loaded`);
+                resolve();
             };
-
             img.onerror = () => {
-                clearTimeout(timeout);
-                resolve(false);
+                log(`Image ${index} failed to load: ${url}`);
+                container.removeChild(img); // remove broken image silently
+                resolve();
             };
-
             img.src = url;
+            container.appendChild(img); // appended immediately, loads in background
         });
     }
 
-    // NEW FUNCTION: Searches multiple keys with incrementing suffix
-    // Returns array of all found image URLs in order (base, base-2, base-3, etc.)
-    async function getAllImageUrlsInSequence(imageKey) {
-        const foundUrls = [];
-
-        let imageNumber = 1;
-
-        while (true) {
-
-            const candidates = [
-                `${CONFIG.mediaBaseUrl}${imageKey}/${imageNumber}.png`,
-                `${CONFIG.mediaBaseUrl}${imageKey}/${imageNumber}.jpg`,
-                `${CONFIG.mediaBaseUrl}${imageKey}/${imageNumber}.jpeg`,
-                `${CONFIG.mediaBaseUrl}${imageKey}/${imageNumber}.webp`
-            ];
-
-            let foundUrl = null;
-
-            for (const url of candidates) {
-                const exists = await checkImageExists(url);
-
-                if (exists) {
-                    foundUrl = url;
-                    break;
-                }
-            }
-
-            if (!foundUrl) {
-                log(`No image found for #${imageNumber}, stopping search`);
-                break;
-            }
-
-            foundUrls.push(foundUrl);
-            imageNumber++;
+    async function loadImagesSequentially(imageKey, imageCount) {
+        for (let i = 1; i <= imageCount; i++) {
+            const url = `${CONFIG.mediaBaseUrl}${imageKey}/${i}.webp`;
+            await appendImageAndWait(url, i);
         }
-
-        return foundUrls;
+        log(`Done loading ${imageCount} image(s) for ${imageKey}`);
     }
-    
-    // MODIFIED: Now displays multiple images vertically
-    function displayImages(imageUrls) {
-        if (!imageUrls || imageUrls.length === 0) {
-            container.innerHTML = "";
-            return;
-        }
-        
-        // Build HTML with all images stacked vertically
-        let imagesHtml = '';
-        for (let i = 0; i < imageUrls.length; i++) {
-            imagesHtml += `
-                <img src="${imageUrls[i]}" 
-                     style="width: ${CONFIG.imageWidth}; 
-                            height: ${CONFIG.imageHeight}; 
-                            border-radius: ${CONFIG.borderRadius};
-                            object-fit: ${CONFIG.objectFit};
-                            display: block;
-                            margin: 0 auto;" 
-                     alt="Product image ${i + 1}">
-            `;
-        }
-        
-        container.innerHTML = imagesHtml;
-        log(`${imageUrls.length} images displayed vertically`);
-    }
-    
+
     function extractProductName() {
         try {
             const parentDoc = window.parent.document;
             if (!parentDoc) return null;
-            
+
             let productEl = parentDoc.querySelector("h1.block-product__title");
             if (productEl && productEl.innerText.trim()) {
                 return productEl.innerText.trim();
             }
-            
+
             const allH1s = parentDoc.querySelectorAll("h1");
             for (let i = 0; i < allH1s.length; i++) {
                 const text = allH1s[i].innerText.trim();
@@ -185,27 +130,25 @@
             return null;
         }
     }
-    
+
     let findInterval = setInterval(async () => {
         const productName = extractProductName();
-        
+
         if (productName) {
             clearInterval(findInterval);
             const imageKey = generateImageKey(productName);
             log(`Product: ${productName} | Key: ${imageKey}`);
-            
-            // Get ALL images in sequence (base, -2, -3, etc.)
-            const imageUrls = await getAllImageUrlsInSequence(imageKey);
-            
-            if (imageUrls.length > 0) {
-                displayImages(imageUrls);
+
+            const imageCount = await fetchImageCount(imageKey);
+
+            if (imageCount > 0) {
+                await loadImagesSequentially(imageKey, imageCount);
             } else {
-                log(`No images found for: ${imageKey} or any suffix`);
                 container.innerHTML = "";
             }
         }
     }, 300);
-    
+
     setTimeout(() => {
         if (findInterval) {
             clearInterval(findInterval);
