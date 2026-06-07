@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<style>
+body {
+    background: transparent;
+}
+#sm-contact-wrapper {
+    max-width: 600px;
+    margin: 40px auto;
+    font-family: Arial, sans-serif;
+    background: #fff;
+    border-radius: 20px;
+    padding: 40px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+}
+#sm-contact-title {
+    text-align: center;
+    margin-bottom: 25px;
+}
+#sm-contact-title .sm-title-line1 {
+    font-size: 22px;
+    font-weight: 400;
+    color: #333;
+    display: block;
+}
+#sm-contact-title .sm-title-line2 {
+    font-size: 28px;
+    font-weight: 700;
+    color: #2c6b6f;
+    display: block;
+    margin-top: 4px;
+}
+.sm-field-label {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 16px;
+    color: #333;
+}
+.sm-input,
+.sm-textarea {
+    width: 100%;
+    box-sizing: border-box;
+    border: none;
+    background: #f1f1f1;
+    padding: 16px;
+    font-size: 15px;
+    border-radius: 3px;
+    margin-bottom: 24px;
+}
+.sm-textarea {
+    min-height: 140px;
+    resize: vertical;
+}
+#sm-submit {
+    display: block;
+    margin: 20px auto 0;
+    background: #000;
+    color: #fff;
+    border: none;
+    border-radius: 999px;
+    padding: 16px 50px;
+    cursor: pointer;
+    font-size: 18px;
+}
+#sm-submit:hover { opacity: 0.9; }
+#sm-status {
+    text-align: center;
+    margin-top: 16px;
+    font-size: 14px;
+    min-height: 20px;
+}
+</style>
+</head>
+<body>
+<div id="sm-contact-wrapper">
+    <div id="sm-contact-title">
+        <span class="sm-title-line1">Leave Us A Message About</span>
+        <span class="sm-title-line2" id="sm-product-name">This Product</span>
+    </div>
+
+    <form id="sm-contact-form">
+        <label class="sm-field-label">Name</label>
+        <input class="sm-input" type="text" name="first_name" placeholder="Your name" required>
+
+        <label class="sm-field-label">Your email*</label>
+        <input class="sm-input" type="email" name="email" placeholder="Your email address" required>
+
+        <label class="sm-field-label">Message*</label>
+        <textarea class="sm-textarea" name="message" placeholder="Enter your message" required></textarea>
+
+        <input type="hidden" id="sm-hidden-product" name="product_name">
+
+        <button id="sm-submit" type="submit">Submit</button>
+        <div id="sm-status"></div>
+    </form>
+</div>
+
+<script>
+(function(){
+    // ── EmailJS config ──────────────────────────────
+    const EMAILJS_PUBLIC_KEY  = "nuOnawtvQx_IrtmAR";
+    const EMAILJS_SERVICE_ID  = "service_qzgvywe";
+    const EMAILJS_TEMPLATE_ID = "template_8bujvw8";
+    // ────────────────────────────────────────────────
+
+    emailjs.init(EMAILJS_PUBLIC_KEY);
+
+    // Inject product name
+    function extractProductName() {
+        try {
+            const parentDoc = window.parent.document;
+            let productEl = parentDoc.querySelector("h1.block-product__title");
+            if (productEl && productEl.innerText.trim()) return productEl.innerText.trim();
+            const allH1s = parentDoc.querySelectorAll("h1");
+            for (let i = 0; i < allH1s.length; i++) {
+                const text = allH1s[i].innerText.trim();
+                if (text && text.length > 2 && text.length < 200 &&
+                    !text.toLowerCase().includes("search") &&
+                    !text.toLowerCase().includes("error")) {
+                    return text;
+                }
+            }
+        } catch(e) {}
+        return null;
+    }
+
+    let attempts = 0;
+    const interval = setInterval(() => {
+        const productName = extractProductName();
+        if (productName) {
+            clearInterval(interval);
+            const cleanProductName = productName.split("|")[0].trim();
+
+            document.getElementById("sm-product-name").textContent = cleanProductName;
+            document.getElementById("sm-hidden-product").value = cleanProductName;
+        }
+        if (++attempts > 50) clearInterval(interval);
+    }, 300);
+
+    // Form submission
+    document.getElementById("sm-contact-form").addEventListener("submit", function(e) {
+        e.preventDefault();
+        const btn    = document.getElementById("sm-submit");
+        const status = document.getElementById("sm-status");
+
+        btn.disabled = true;
+        btn.textContent = "Sending…";
+        status.textContent = "";
+
+        emailjs.sendForm(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, this)
+            .then(() => {
+                status.style.color = "#2c6b6f";
+                status.textContent = "Message sent! We'll get back to you soon.";
+                this.reset();
+            })
+            .catch((err) => {
+                status.style.color = "#c0392b";
+                status.textContent = "Something went wrong. Please try again.";
+                console.error("EmailJS error:", err);
+            })
+            .finally(() => {
+                btn.disabled = false;
+                btn.textContent = "Submit";
+            });
+    });
+})();
+</script>
+</body>
+</html>
