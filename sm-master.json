@@ -1,26 +1,36 @@
 {
-        "info-ventilator-crius-v4": {
+        "info-crius-v4-transport-ventilation": {
             "ts": "",
-            "image_count": 1
+            "images": [
+                "tv1", "tv2"
+            ]
         }, 
 
         "info-ventilator-crius-v5": {
             "ts": "",
-            "image_count": 1
+            "images": [
+                "bv1", "bv2", "bv3"
+            ]
         },
     
         "info-ventilator-crius-v6": {
             "ts": "<p style=\"font-size: 32px; font-weight: 700; margin: 0 0 8px 0;\">Comprehensive & Powerful Ventilator<\/p>\r\n\r\n<p style=\"margin: 0 0 16px 0;\">High-end mechanical ventilator from Northern Meditec. A wide range of standard features and options allows you to fit the Crius V6 to your needs.<\/p>\r\n\r\n<p style=\"font-size: 28px; font-weight: 700; margin: 16px 0 4px 0; color: #1d6063;\">Details<\/p>\r\n\r\n<p style=\"font-size: 16px; font-weight: 700; margin: 16px 0 4px 0;\">Turbine Based<\/p>\r\n<ul style=\"list-style-type: disc; padding-left: 20px; margin: 0 0 16px 0;\">\r\n    <li>Shorter triggering and inspiratory delay<\/li>\r\n    <li>Powerful non-invasive ventilation<\/li>\r\n    <li>Compressor Free<\/li>\r\n    <li>Central Gas Free<\/li>\r\n    <li>Less cost<\/li>\r\n<\/ul>\r\n\r\n<p style=\"font-size: 16px; font-weight: 700; margin: 16px 0 4px 0;\">Control<\/p>\r\n<p style=\"margin: 0 0 16px 0;\">Crius V6 is a fully electronic control ventilator.<\/p>\r\n\r\n<p style=\"font-size: 16px; font-weight: 700; margin: 16px 0 4px 0;\">Tidal Volume<\/p>\r\n<p style=\"margin: 0 0 4px 0;\">20 to 2000mL (2 to 2000mL optional)<\/p>\r\n<p style=\"margin: 0 0 16px 0;\">A wide range of TV adjustments allows the medical team to tailor the ventilator to multiple types\/needs of patients.<\/p>\r\n\r\n<p style=\"font-size: 28px; font-weight: 700; margin: 16px 0 8px 0; color: #1d6063;\">Ventilation Modes<\/p>\r\n\r\n<p style=\"font-size: 16px; font-weight: 700; margin: 8px 0 4px 0;\">Invasive ventilation mode<\/p>\r\n<ul style=\"list-style-type: disc; padding-left: 20px; margin: 0 0 16px 0;\">\r\n    <li>VCV, PCV, PRVC, V-SIMV, P-SIMV, PRVC-SIMV, CPAP\/PSV<\/li>\r\n    <li>CPAP-VG, APRV, Dual PAP; Optional: AMV, nCPAP<\/li>\r\n<\/ul>\r\n\r\n<p style=\"font-size: 16px; font-weight: 700; margin: 8px 0 4px 0;\">Non-invasive ventilation mode<\/p>\r\n<ul style=\"list-style-type: disc; padding-left: 20px; margin: 0 0 16px 0;\">\r\n    <li>PRVC, P-SIMV, PRVC-SIMV, Dual PAP, APRV, CPAP\/PSV, CPAP-VG, nCPAP, Apnea Ventilation, PCV<\/li>\r\n<\/ul>\r\n\r\n<p style=\"font-size: 16px; font-weight: 700; margin: 8px 0 4px 0;\">Oxygen therapy<\/p>\r\n<ul style=\"list-style-type: disc; padding-left: 20px; margin: 0 0 16px 0;\">\r\n    <li>Provide high flow oxygen therapy (HFNC) function through nasal humidification (Maximum 100L\/min)<\/li>\r\n<\/ul>\r\n\r\n<p style=\"font-size: 28px; font-weight: 700; margin: 16px 0 4px 0; color: #1d6063;\">Tools<\/p>\r\n<ul style=\"list-style-type: disc; padding-left: 20px; margin: 0 0 16px 0;\">\r\n    <li>Rlung, RSBI, P0.1, PEEPi, V-CO2, PTP, Expiratory Hold, Sigh, ATC, PCVR, PPS<\/li>\r\n    <li>Compliance, calibration, O2 suction, 100% O2, and more<\/li>\r\n    <li>Screen Freeze and Lock<\/li>\r\n    <li>Lung measurement tools: 3 loops<\/li>\r\n<\/ul>\r\n\r\n<p style=\"font-size: 28px; font-weight: 700; margin: 16px 0 8px 0; color: #1d6063;\">Multi-Clinical Demands<\/p>\r\n<p style=\"margin: 0 0 4px 0;\">Departments: ICU, CCU, PACU, EICU, OR, In-Hospital Transport, etc.<\/p>\r\n<p style=\"font-size: 16px; font-weight: 700; margin: 8px 0 4px 0;\">Suitable for:<\/p>\r\n<ul style=\"list-style-type: disc; padding-left: 20px; margin: 0 0 16px 0;\">\r\n    <li>Adult and pediatric intensive care<\/li>\r\n    <li>Critical care transport<\/li>\r\n    <li>Long-term acute care<\/li>\r\n<\/ul>",
-            "image_count": 1
+            "images": [
+                "sv1"
+            ]
         },
 
         "info-ventilator-crius-v7": {
             "ts": "",
-            "image_count": 1
+            "images": [
+                "fv1", "fv2", "fv3"
+            ]
         },
 
         "info-ventilator-crius-v8": {
             "ts": "",
-            "image_count": 7
+            "images": [
+                "av1","av2","av3","av4","av5","av6","av7"
+            ]
         }
 }

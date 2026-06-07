@@ -20,8 +20,8 @@
         marginTop: "10px",
         marginBottom: "10px",
         verticalGap: "15px",
-        mediaBaseUrl: "https://raw.githubusercontent.com/dpzcr/sm-textsource/main/sm-info/",
-        masterJsonUrl: "https://raw.githubusercontent.com/dpzcr/sm-textsource/main/sm-ts.json",
+        mediaBaseUrl: "https://raw.githubusercontent.com/dpzcr/sm-textsource/main/sm-image/",
+        masterJsonUrl: "https://raw.githubusercontent.com/dpzcr/sm-textsource/main/sm-master.json",
         debug: false
     };
 
@@ -55,19 +55,19 @@
         return `info-${slug}`;
     }
 
-    async function fetchImageCount(imageKey) {
+    async function fetchImages(imageKey) {
         try {
             const res = await fetch(`${CONFIG.masterJsonUrl}?t=${Date.now()}`);
             const data = await res.json();
             const entry = data[imageKey];
-            if (entry && typeof entry.image_count === 'number') {
-                return entry.image_count;
+            if (entry && Array.isArray(entry.images) && entry.images.length > 0) {
+                return entry.images;
             }
-            log(`Key "${imageKey}" not found or missing image_count in master JSON`);
-            return 0;
+            log(`Key "${imageKey}" not found or has no images array`);
+            return [];
         } catch (e) {
             log("Failed to fetch master JSON: " + e);
-            return 0;
+            return [];
         }
     }
 
@@ -83,45 +83,38 @@
                 display: block;
                 margin: 0 auto;
             `;
-            img.onload = () => {
-                log(`Image ${index} loaded`);
-                resolve();
-            };
+            img.onload = () => { log(`Image ${index} loaded`); resolve(); };
             img.onerror = () => {
                 log(`Image ${index} failed to load: ${url}`);
-                container.removeChild(img); // remove broken image silently
+                container.removeChild(img);
                 resolve();
             };
             img.src = url;
-            container.appendChild(img); // appended immediately, loads in background
+            container.appendChild(img);
         });
     }
 
-    async function loadImagesSequentially(imageKey, imageCount) {
-        for (let i = 1; i <= imageCount; i++) {
-            const url = `${CONFIG.mediaBaseUrl}${imageKey}/${i}.webp`;
-            await appendImageAndWait(url, i);
+    async function loadImagesSequentially(imageKey, imageNames) {
+        for (let i = 0; i < imageNames.length; i++) {
+            const url = `${CONFIG.mediaBaseUrl}${imageKey}/${imageNames[i]}.webp`;
+            await appendImageAndWait(url, i + 1);
         }
-        log(`Done loading ${imageCount} image(s) for ${imageKey}`);
+        log(`Done loading ${imageNames.length} image(s) for ${imageKey}`);
     }
 
     function extractProductName() {
         try {
             const parentDoc = window.parent.document;
             if (!parentDoc) return null;
-
             let productEl = parentDoc.querySelector("h1.block-product__title");
-            if (productEl && productEl.innerText.trim()) {
-                return productEl.innerText.trim();
-            }
-
+            if (productEl && productEl.innerText.trim()) return productEl.innerText.trim();
             const allH1s = parentDoc.querySelectorAll("h1");
             for (let i = 0; i < allH1s.length; i++) {
                 const text = allH1s[i].innerText.trim();
-                if (text && text.length > 2 && text.length < 200) {
-                    if (!text.toLowerCase().includes("search") && !text.toLowerCase().includes("error")) {
-                        return text;
-                    }
+                if (text && text.length > 2 && text.length < 200 &&
+                    !text.toLowerCase().includes("search") &&
+                    !text.toLowerCase().includes("error")) {
+                    return text;
                 }
             }
             return null;
@@ -133,16 +126,14 @@
 
     let findInterval = setInterval(async () => {
         const productName = extractProductName();
-
         if (productName) {
             clearInterval(findInterval);
             const imageKey = generateImageKey(productName);
             log(`Product: ${productName} | Key: ${imageKey}`);
 
-            const imageCount = await fetchImageCount(imageKey);
-
-            if (imageCount > 0) {
-                await loadImagesSequentially(imageKey, imageCount);
+            const imageNames = await fetchImages(imageKey);
+            if (imageNames.length > 0) {
+                await loadImagesSequentially(imageKey, imageNames);
             } else {
                 container.innerHTML = "";
             }
