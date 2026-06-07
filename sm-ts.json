@@ -20,7 +20,7 @@
         },
 
         "info-ventilator-crius-v8": {
-            "ts": "test",
+            "ts": "",
             "image_count": 7
         }
 }
