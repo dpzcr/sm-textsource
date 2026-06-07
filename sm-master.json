@@ -32,5 +32,26 @@
             "images": [
                 "av1","av2","av3","av4","av5","av6","av7"
             ]
+        },
+
+        "info-atlas-n3": {
+            "ts": "",
+            "images": [
+                "ns1","ns2","bot_tool1","bot_masimo"
+            ]
+        },
+
+        "info-atlas-n7": {
+            "ts": "",
+            "images": [
+                "nd1","nd2","nd3","nd4","nd5","bot_tool1","bot_masimo"
+            ]
+        },
+
+        "info-taurus": {
+            "ts": "<p style=\"font-size: 32px; font-weight: 700; margin: 0 0 8px 0;\">Taurus Patient Monitor<\/p>\r\n\r\n<p style=\"margin: 0 0 16px 0;\">12.1\" color TFT touch screen, wide and flat screen design. Multiple parameter options satisfy the need for ICU, CCU, NICU.<\/p>\r\n\r\n<p style=\"font-size: 28px; font-weight: 700; margin: 16px 0 4px 0; color: #1d6063;\">Configuration<\/p>\r\n\r\n<p style=\"margin: 0 0 16px 0;\">ECG+SpO2+NIBP+2TEMP+PR+RESP, Li-ion battery<\/p>\r\n\r\n<p style=\"font-size: 28px; font-weight: 700; margin: 16px 0 4px 0; color: #1d6063;\">Optional<\/p>\r\n\r\n<p style=\"margin: 0 0 16px 0;\">Masimo\/Nellcor SpO2, EtCO2, C.O, 2-IBP, AG, BIS, NMT, Thermal recorder<\/p>\r\n\r\n<p style=\"font-size: 28px; font-weight: 700; margin: 16px 0 8px 0; color: #1d6063;\">Features<\/p>\r\n\r\n<ul style=\"list-style-type: disc; padding-left: 20px; margin: 0 0 16px 0;\">\r\n    <li>12.1\" color TFT LCD Touch screen<\/li>\r\n    <li>8 waveform display, up to 12-lead ECG analysis<\/li>\r\n    <li>Powerful calculation (Hemodynamic, Dose, Oxygenation, Ventilation)<\/li>\r\n    <li>Pacemaker detection<\/li>\r\n    <li>ST & arrhythmia analysis<\/li>\r\n    <li>OxyCRGs<\/li>\r\n    <li>BIS module, NMT module optional<\/li>\r\n    <li>Wired\/Wireless CMS, support HL7 protocol to HIS<\/li>\r\n    <li>SpO2 pulse-tone modulation (Pitch Tone)<\/li>\r\n    <li>MEWS (Modified Early Warning Score)<\/li>\r\n    <li>Graphical & tabular trend review (480 hours)<\/li>\r\n    <li>48h full disclosure wave review for each patient<\/li>\r\n<\/ul>",
+            "images": [
+                "bot_masimo"
+            ]
         }
 }
