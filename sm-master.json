@@ -53,5 +53,42 @@
             "images": [
                 "bot_masimo"
             ]
+        },
+
+        "info-yk-8000c-patient-monitor": {
+            "ts": "",
+            "images": [
+                "bot_masimo"
+            ]
+        },
+
+        "info-yk-8000b-patient-monitor": {
+            "ts": "",
+            "images": [
+                "bot_masimo"
+            ]
+        },
+
+        "info-new-pe-e12a-portable-ecg-monitor": {
+            "ts": "",
+            "images": [
+                "bot_masimo"
+            ]
+        },
+
+        "info-high-accuracy-infusion-pump-pi-ip3a": {
+            "ts": "",
+            "images": [
+                "bot_masimo"
+            ]
+        },
+
+        "info-high-precision-syringe-pump-for-ccu-pi-sp1": {
+            "ts": "",
+            "images": [
+                "bot_masimo"
+            ]
         }
+
+
 }

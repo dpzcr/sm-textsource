@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { background: transparent; }
+
+        /* ═══════════════════════════════════════════
+           ADJUST SIZES HERE
+        ═══════════════════════════════════════════ */
+        :root {
+            --section-pad:    28px;       /* outer box padding          */
+            --card-gap:       14px;       /* space between cards        */
+            --card-img-pad:   14px;       /* image whitespace in card   */
+            --card-info-pad:  11px 13px 14px; /* text area padding      */
+            --name-size:      13px;       /* product title font size    */
+            --sub-size:       12px;       /* subtitle font size         */
+            --title-size:     17px;       /* "Related Products" heading */
+        }
+        /* ═══════════════════════════════════════════ */
+        @media (min-width: 1024px) {
+            :root {
+                --section-pad: 40px;
+                --card-gap: 20px;
+                --card-img-pad: 18px;
+                --name-size: 15px;
+                --sub-size: 13px;
+                --title-size: 22px;
+            }
+
+            .sm-rp-img {
+                padding: 10px;
+            }
+
+            .sm-rp-card {
+                border-radius: 14px;
+                max-width: 260px;
+                margin: 0 auto;
+            }
+        }
+        #sm-rp {
+            font-family: 'Outfit', sans-serif;
+            background: #fff;
+            border-radius: 16px;
+            padding: var(--section-pad);
+            box-shadow: 0 2px 20px rgba(0,0,0,0.07);
+        }
+        .sm-rp-title {
+            font-size: var(--title-size);
+            font-weight: 600;
+            color: #1d6063;
+            margin-bottom: 18px;
+            letter-spacing: -0.2px;
+        }
+        .sm-rp-grid { display: grid; gap: var(--card-gap); }
+        .sm-rp-card {
+            background: #f7f8f8;
+            border-radius: 10px;
+            overflow: hidden;
+            text-decoration: none;
+            display: block;
+            transition: transform 0.18s, box-shadow 0.18s;
+        }
+        .sm-rp-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(29,96,99,0.13);
+        }
+        .sm-rp-img {
+            width: 100%;
+            aspect-ratio: 1;
+            background: #fff;
+            padding: var(--card-img-pad);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+       .sm-rp-img img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transform: scale(1.02);
+        }
+        .sm-rp-info { padding: var(--card-info-pad); }
+        .sm-rp-name {
+            font-size: var(--name-size);
+            font-weight: 600;
+            color: #111;
+            line-height: 1.35;
+            margin-bottom: 3px;
+        }
+        .sm-rp-sub { font-size: var(--sub-size); color: #1d6063; }
+        .sm-rp-nav {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 18px;
+        }
+        .sm-rp-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            border: 1.5px solid #1d6063;
+            background: transparent;
+            color: #1d6063;
+            cursor: pointer;
+            font-size: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.15s;
+        }
+        .sm-rp-btn:hover:not(:disabled) { background: #1d6063; color: #fff; }
+        .sm-rp-btn:disabled { opacity: 0.2; cursor: default; }
+        .sm-rp-dots { display: flex; gap: 5px; align-items: center; }
+        .sm-rp-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #ccc;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.2s;
+        }
+        .sm-rp-dot.active { background: #1d6063; transform: scale(1.3); }
+    </style>
+</head>
+<body>
+<div id="sm-rp"></div>
+<script>
+(function () {
+    // ══════════════════════════════════════════════
+    //  CONFIG
+    // ══════════════════════════════════════════════
+    const CONFIG = {
+        itemsPerPage:       4,      // Desktop: cards shown per page
+        itemsPerPageMobile: 2,      // Mobile:  cards shown per page
+        mobileBreakpoint:   640,    // px — threshold for "mobile"
+        groupBy:        "subtitle", // "subtitle" = same category | "brand" = same company
+        title:          "Related Products",
+        productBaseUrl: "/",
+    };
+    // ══════════════════════════════════════════════
+
+    const STORE_ID = "store_01KQKJB13XKPYAWVNW00WVB98Q";
+    const API = `https://api-ecommerce.hostinger.com/store/${STORE_ID}/products?limit=100`;
+
+    const root = document.getElementById("sm-rp");
+    if (!root) return;
+
+    let page = 0;
+    let related = [];
+
+    function ipp() {
+        return window.innerWidth < CONFIG.mobileBreakpoint
+            ? CONFIG.itemsPerPageMobile
+            : CONFIG.itemsPerPage;
+    }
+
+    function getCurrentSlug() {
+        try {
+            return window.parent.location.pathname.replace(/^\//, '').split('/')[0] || null;
+        } catch(e) { return null; }
+    }
+
+    function extractProductName() {
+        try {
+            const pd = window.parent.document;
+            const el = pd.querySelector("h1.block-product__title") || pd.querySelector("h1");
+            const text = el?.innerText.trim();
+            return (text && text.length > 2 && text.length < 200) ? text : null;
+        } catch(e) { return null; }
+    }
+
+    function cleanTitle(raw) { return raw.split('|')[0].trim(); }
+    function getBrand(raw)   { return (raw.split('|')[1] || '').trim(); }
+
+    function findCurrent(slug, name, products) {
+        if (slug) {
+            const p = products.find(p => p.url_handle === slug);
+            if (p) return p;
+        }
+        if (name) {
+            const n = name.toLowerCase();
+            return products.find(p => p.title.toLowerCase() === n)
+                || products.find(p => cleanTitle(p.title).toLowerCase() === cleanTitle(n).toLowerCase());
+        }
+        return null;
+    }
+
+    function getRelated(current, products) {
+        if (!current) return [];
+        return products.filter(p => {
+            if (p.id === current.id) return false;
+            return CONFIG.groupBy === "subtitle"
+                ? p.subtitle === current.subtitle
+                : getBrand(p.title) === getBrand(current.title);
+        });
+    }
+
+    function render() {
+        const perPage = ipp();
+        const total   = Math.ceil(related.length / perPage);
+        if (page >= total) page = Math.max(0, total - 1);
+        const items = related.slice(page * perPage, (page + 1) * perPage);
+
+        const cards = items.map(p => `
+            <a href="${CONFIG.productBaseUrl}${p.url_handle}" class="sm-rp-card" target="_parent">
+                <div class="sm-rp-img">
+                    <img src="${p.thumbnail}" alt="${cleanTitle(p.title)}" loading="lazy">
+                </div>
+                <div class="sm-rp-info">
+                    <div class="sm-rp-name">${cleanTitle(p.title)}</div>
+                    ${p.subtitle ? `<div class="sm-rp-sub">${p.subtitle}</div>` : ''}
+                </div>
+            </a>
+        `).join('');
+
+        const dots = Array.from({length: total}, (_, i) =>
+            `<div class="sm-rp-dot ${i === page ? 'active' : ''}" data-i="${i}"></div>`
+        ).join('');
+
+        root.innerHTML = `
+            <div class="sm-rp-title">${CONFIG.title}</div>
+            <div class="sm-rp-grid" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr))">${cards}</div>
+            ${total > 1 ? `
+            <div class="sm-rp-nav">
+                <button class="sm-rp-btn" id="sm-prev" ${page === 0 ? 'disabled' : ''}>&#8592;</button>
+                <div class="sm-rp-dots">${dots}</div>
+                <button class="sm-rp-btn" id="sm-next" ${page >= total - 1 ? 'disabled' : ''}>&#8594;</button>
+            </div>` : ''}
+        `;
+
+        root.querySelector('#sm-prev')?.addEventListener('click', () => { page--; render(); });
+        root.querySelector('#sm-next')?.addEventListener('click', () => { page++; render(); });
+        root.querySelectorAll('.sm-rp-dot').forEach(d =>
+            d.addEventListener('click', () => { page = +d.dataset.i; render(); })
+        );
+    }
+
+    // Only triggers a layout recalculation if the actual screen width changes
+    window.addEventListener('resize', () => { 
+        if (window.innerWidth !== lastWidth) {
+            lastWidth = window.innerWidth;
+            page = 0; 
+            render(); 
+        }
+    });
+
+    async function init() {
+        try {
+            const res = await fetch(API);
+            const { products } = await res.json();
+
+            const slug = getCurrentSlug();
+            let current = findCurrent(slug, null, products);
+
+            if (!current) {
+                const productName = await new Promise(resolve => {
+                    let n = 0;
+                    const t = setInterval(() => {
+                        const name = extractProductName();
+                        if (name || ++n > 50) { clearInterval(t); resolve(name); }
+                    }, 300);
+                });
+                current = findCurrent(null, productName, products);
+            }
+
+            related = getRelated(current, products);
+            if (related.length) render();
+        } catch(e) {
+            console.error("[Related Products]", e);
+        }
+    }
+
+    init();
+})();
+</script>
+</body>
+</html>
