@@ -12,35 +12,28 @@
            ADJUST SIZES HERE
         ═══════════════════════════════════════════ */
         :root {
-            --section-pad:    28px;       /* outer box padding          */
-            --card-gap:       14px;       /* space between cards        */
-            --card-img-pad:   14px;       /* image whitespace in card   */
-            --card-info-pad:  11px 13px 14px; /* text area padding      */
-            --name-size:      13px;       /* product title font size    */
-            --sub-size:       12px;       /* subtitle font size         */
-            --title-size:     17px;       /* "Related Products" heading */
+            --section-pad:   28px;
+            --card-gap:      14px;
+            --card-img-h:    180px;           /* image area height — mobile  */
+            --card-img-pad:  14px;
+            --card-info-pad: 11px 13px 14px;
+            --name-size:     13px;
+            --sub-size:      12px;
+            --title-size:    17px;
         }
-        /* ═══════════════════════════════════════════ */
         @media (min-width: 1024px) {
             :root {
-                --section-pad: 40px;
-                --card-gap: 20px;
+                --section-pad:  40px;
+                --card-gap:     20px;
+                --card-img-h:   240px;        /* image area height — desktop */
                 --card-img-pad: 18px;
-                --name-size: 15px;
-                --sub-size: 13px;
-                --title-size: 22px;
-            }
-
-            .sm-rp-img {
-                padding: 10px;
-            }
-
-            .sm-rp-card {
-                border-radius: 14px;
-                max-width: 260px;
-                margin: 0 auto;
+                --name-size:    15px;
+                --sub-size:     13px;
+                --title-size:   22px;
             }
         }
+        /* ═══════════════════════════════════════════ */
+
         #sm-rp {
             font-family: 'Outfit', sans-serif;
             background: #fff;
@@ -70,18 +63,20 @@
         }
         .sm-rp-img {
             width: 100%;
-            aspect-ratio: 1;
+            height: var(--card-img-h);   /* fixed height = consistent across all cards */
             background: #fff;
             padding: var(--card-img-pad);
             display: flex;
             align-items: center;
             justify-content: center;
+            overflow: hidden;
         }
-       .sm-rp-img img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            transform: scale(1.02);
+        .sm-rp-img img {
+            max-width: 100%;
+            max-height: 100%;
+            width: auto;
+            height: auto;
+            object-fit: contain;
         }
         .sm-rp-info { padding: var(--card-info-pad); }
         .sm-rp-name {
@@ -135,12 +130,12 @@
     //  CONFIG
     // ══════════════════════════════════════════════
     const CONFIG = {
-        itemsPerPage:       4,      // Desktop: cards shown per page
-        itemsPerPageMobile: 2,      // Mobile:  cards shown per page
-        mobileBreakpoint:   640,    // px — threshold for "mobile"
-        groupBy:        "subtitle", // "subtitle" = same category | "brand" = same company
-        title:          "Related Products",
-        productBaseUrl: "/",
+        itemsPerPage:       4,
+        itemsPerPageMobile: 2,
+        mobileBreakpoint:   640,
+        groupBy:            "subtitle",
+        title:              "Related Products",
+        productBaseUrl:     "/",
     };
     // ══════════════════════════════════════════════
 
@@ -152,6 +147,7 @@
 
     let page = 0;
     let related = [];
+    let lastWidth = window.innerWidth;
 
     function ipp() {
         return window.innerWidth < CONFIG.mobileBreakpoint
@@ -224,7 +220,7 @@
 
         root.innerHTML = `
             <div class="sm-rp-title">${CONFIG.title}</div>
-            <div class="sm-rp-grid" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr))">${cards}</div>
+            <div class="sm-rp-grid" style="grid-template-columns:repeat(${perPage},1fr)">${cards}</div>
             ${total > 1 ? `
             <div class="sm-rp-nav">
                 <button class="sm-rp-btn" id="sm-prev" ${page === 0 ? 'disabled' : ''}>&#8592;</button>
@@ -240,12 +236,11 @@
         );
     }
 
-    // Only triggers a layout recalculation if the actual screen width changes
-    window.addEventListener('resize', () => { 
+    window.addEventListener('resize', () => {
         if (window.innerWidth !== lastWidth) {
             lastWidth = window.innerWidth;
-            page = 0; 
-            render(); 
+            page = 0;
+            render();
         }
     });
 
