@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { background: transparent; }
+        
+        /* Removed background, border-radius, and padding here */
+        .nav-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px 24px;
+            font-family: 'Outfit', sans-serif;
+        }
+        
+        .nav-grid a {
+            color: #fff;
+            text-decoration: none;
+            font-size: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 3px 0;
+            transition: opacity 0.15s;
+        }
+        .nav-grid a:hover { opacity: 0.75; }
+        .nav-grid a::before {
+            content: '•';
+            font-size: 18px;
+            line-height: 1;
+        }
+    </style>
+</head>
+<body>
+<div id="nav-root"></div>
+<script>
+    // ── EDIT LINKS HERE ──────────────────────────
+    const LINKS = [
+        { label: "Home",       url: "/" },
+        { label: "About Us",   url: "/about" },
+        { label: "Contact Us", url: "/contact" },
+        { label: "Catalogue",  url: "/catalogue" }
+    ];
+    // ─────────────────────────────────────────────
+
+    const root = document.getElementById("nav-root");
+    root.innerHTML = `<div class="nav-grid">${
+        LINKS.map(l => `<a href="${l.url}" target="_parent">${l.label}</a>`).join('')
+    }</div>`;
+</script>
+</body>
+</html>
