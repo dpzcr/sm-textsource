@@ -88,6 +88,13 @@
             "images": [
                 "sp1", "sp2"
             ]
+        },
+
+        "info-shangrila-510s-ventilator": {
+            "ts": "test",
+            "images": [
+                "aeonmedvent1", "aeonmedvent2"
+            ]
         }
 
 

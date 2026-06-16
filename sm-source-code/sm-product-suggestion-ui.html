@@ -133,7 +133,7 @@
         itemsPerPage:       4,
         itemsPerPageMobile: 2,
         mobileBreakpoint:   640,
-        groupBy:            "subtitle",
+        groupBy:            "subtitle", // "subtitle" = same category | "brand" = same company
         title:              "Related Products",
         productBaseUrl:     "/",
     };
@@ -186,14 +186,40 @@
         return null;
     }
 
+    function stripHtml(html) {
+        return (html || '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+    }
+
+    function extractKeywords(p) {
+        const text = [cleanTitle(p.title), p.subtitle || '', stripHtml(p.description || '')].join(' ');
+        return [...new Set(
+            text.toLowerCase().replace(/[^a-z0-9\s]/g, ' ').split(/\s+/)
+                .filter(w => w.length > 4).map(w => w.slice(0, 7))  // stem: "ventilator" & "ventilation" → "ventila"
+        )];
+    }
+
+    function scoreProduct(current, candidate) {
+        const kws  = extractKeywords(current);
+        const sub  = (candidate.subtitle || '').toLowerCase();
+        const ttl  = cleanTitle(candidate.title).toLowerCase();
+        const desc = stripHtml(candidate.description || '').toLowerCase();
+        let score  = 0;
+        for (const kw of kws) {
+            if (sub.includes(kw))       score += 5;  // subtitle hit — strongest signal
+            else if (ttl.includes(kw))  score += 3;  // title hit
+            else if (desc.includes(kw)) score += 1;  // description hit — weakest
+        }
+        return score;
+    }
+
     function getRelated(current, products) {
         if (!current) return [];
-        return products.filter(p => {
-            if (p.id === current.id) return false;
-            return CONFIG.groupBy === "subtitle"
-                ? p.subtitle === current.subtitle
-                : getBrand(p.title) === getBrand(current.title);
-        });
+        return products
+            .filter(p => p.id !== current.id)
+            .map(p => ({ p, score: scoreProduct(current, p) }))
+            .filter(({ score }) => score > 0)
+            .sort((a, b) => b.score - a.score)
+            .map(({ p }) => p);
     }
 
     function render() {
