@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { background: transparent; }
+
+        #sm-text {
+            height: 20px;
+            overflow: hidden;
+            transition: height 0.4s ease;
+        }
+
+        #sm-images {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            max-width: 1500px;
+            margin: 10px auto;
+            gap: 15px;
+        }
+
+        #sm-images img {
+            width: 100%;
+            height: auto;
+            border-radius: 8px;
+            object-fit: contain;
+            display: block;
+            -webkit-user-drag: none;
+            user-select: none;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+<div id="sm-text"></div>
+<div id="sm-images"></div>
+
+<script>
+(function () {
+    const CONFIG = {
+        masterJsonUrl: "https://raw.githubusercontent.com/dpzcr/sm-textsource/main/sm-master.json",
+        mediaBaseUrl:  "https://raw.githubusercontent.com/dpzcr/sm-textsource/main/sm-image/",
+        debug: false
+    };
+
+    const textEl   = document.getElementById("sm-text");
+    const imagesEl = document.getElementById("sm-images");
+
+    // Disable right-click & drag
+    document.addEventListener("contextmenu", e => e.preventDefault());
+
+    function log(msg) {
+        if (CONFIG.debug) console.log("[SM]", msg);
+    }
+
+    function generateKey(rawTitle) {
+        if (!rawTitle || typeof rawTitle !== 'string') return null;
+        let slug = rawTitle.split('|')[0].trim().toLowerCase();
+        slug = slug.replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+        slug = slug.replace(/-+/g, '-').replace(/^-|-$/g, '');
+        return `info-${slug}`;
+    }
+
+    function extractProductName() {
+        try {
+            const parentDoc = window.parent.document;
+            const h1 = parentDoc.querySelector("h1.block-product__title") || parentDoc.querySelector("h1");
+            return h1 ? h1.innerText.trim() : null;
+        } catch(e) {
+            // Fallback for preview mode
+            const h1 = document.querySelector("h1");
+            return h1 ? h1.innerText.trim() : null;
+        }
+    }
+
+    // ── Text ─────────────────────────────────────────
+    function expandToFit() {
+        // Force reflow then expand to full content height
+        const fullHeight = textEl.scrollHeight;
+        if (fullHeight > 20) {
+            textEl.style.height = fullHeight + 'px';
+            textEl.addEventListener('transitionend', function () {
+                textEl.style.height = 'auto';
+                textEl.style.overflow = '';
+            }, { once: true });
+        }
+    }
+
+    function displayText(text) {
+        textEl.innerHTML = `
+            <div style="
+                font-family: 'Outfit', sans-serif;
+                font-size: 15px;
+                line-height: 1.7;
+                color: #333;
+                margin: 0;
+                padding: 0;
+            ">${text}</div>
+        `;
+        // Small delay to ensure DOM renders, then expand
+        setTimeout(expandToFit, 10);
+    }
+
+    // ── Images ───────────────────────────────────────
+    function appendImageAndWait(url, index) {
+        return new Promise((resolve) => {
+            const img = document.createElement('img');
+            img.alt = `Product image ${index}`;
+            img.draggable = false;
+            img.addEventListener("dragstart", e => e.preventDefault());
+            img.onload  = () => { log(`Image ${index} loaded`); resolve(); };
+            img.onerror = () => {
+                log(`Image ${index} failed: ${url}`);
+                imagesEl.removeChild(img);
+                resolve();
+            };
+            img.src = url;
+            imagesEl.appendChild(img);
+        });
+    }
+
+    async function loadImagesSequentially(imageNames) {
+        for (let i = 0; i < imageNames.length; i++) {
+            await appendImageAndWait(`${CONFIG.mediaBaseUrl}${imageNames[i]}.webp`, i + 1);
+        }
+        log(`Done loading ${imageNames.length} image(s)`);
+    }
+
+    // ── Init ─────────────────────────────────────────
+    const interval = setInterval(async () => {
+        const productName = extractProductName();
+        if (productName) {
+            clearInterval(interval);
+            const key = generateKey(productName);
+            log(`Key: ${key}`);
+
+            try {
+                const res   = await fetch(`${CONFIG.masterJsonUrl}?t=${Date.now()}`);
+                const data  = await res.json();
+                const entry = data[key];
+
+                // 1. Text first
+                if (entry?.ts) displayText(entry.ts);
+
+                // 2. Images below
+                if (Array.isArray(entry?.images) && entry.images.length > 0) {
+                    await loadImagesSequentially(entry.images);
+                }
+            } catch(e) {
+                console.error("Failed to load:", e);
+            }
+        }
+    }, 300);
+
+    setTimeout(() => clearInterval(interval), 15000);
+})();
+</script>
+</body>
+</html>
